@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Panel de Sensores LED</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="top">
+        <div>
+            <h1>⚡ SISTEMA DE MONITOREO LED</h1>
+            <p class="sub">Indicadores virtuales · Sensores simulados</p>
+        </div>
+        <a href="/logout" class="logout">CERRAR SESIÓN</a>
+    </header>
+
+    <main class="wrap">
+        <div class="sensor-grid">
+            <!-- SENSOR HUMEDAD -->
+            <section class="sensor-card">
+                <div class="sensor-header">
+                    <div class="sensor-title">
+                        <span class="sensor-icon">💧</span>
+                        <div>
+                            <h2>Humedad</h2>
+                            <p class="sensor-desc">Sensor ambiental</p>
+                        </div>
+                    </div>
+                    <div class="led-container">
+                        <div id="ledHumedad" class="led led-green-hum"></div>
+                    </div>
+                </div>
+
+                <div class="sensor-value" id="humedadValor">45%</div>
+
+                <div class="control-panel">
+                    <div class="slider-group">
+                        <label>Control deslizante</label>
+                        <input type="range" id="humedadSlider" min="0" max="100" value="45" step="1">
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="number" id="humedadInput" min="0" max="100" value="45" step="1">
+                        <button class="btn" id="humedadBtn">Actualizar</button>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <strong>⚡ Umbrales:</strong><br>
+                    🔴 Rojo: ≤8% (críticamente seco)<br>
+                    🟡 Amarillo: 9% - 30% (advertencia)<br>
+                    🟢 Verde: >30% (óptimo)
+                </div>
+            </section>
+
+            <!-- SENSOR TEMPERATURA -->
+            <section class="sensor-card">
+                <div class="sensor-header">
+                    <div class="sensor-title">
+                        <span class="sensor-icon">🌡️</span>
+                        <div>
+                            <h2>Temperatura</h2>
+                            <p class="sensor-desc">Sensor térmico</p>
+                        </div>
+                    </div>
+                    <div class="led-container">
+                        <div id="ledTemperatura" class="led led-green"></div>
+                    </div>
+                </div>
+
+                <div class="sensor-value" id="tempValor">23°C</div>
+
+                <div class="control-panel">
+                    <div class="slider-group">
+                        <label>Control deslizante</label>
+                        <input type="range" id="tempSlider" min="-10" max="50" value="23" step="0.5">
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="number" id="tempInput" min="-10" max="50" value="23" step="0.5">
+                        <button class="btn" id="tempBtn">Actualizar</button>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <strong>⚡ Umbrales:</strong><br>
+                    🔵 Azul: <10°C (muy frío)<br>
+                    🟢 Verde: 10°C - 25°C (ideal)<br>
+                    🔴 Rojo: >25°C (muy caliente)
+                </div>
+            </section>
+        </div>
+
+        <!-- CONSOLA DE EVENTOS -->
+        <section class="console">
+            <div class="console-head">
+                <strong>📋 REGISTRO DE EVENTOS</strong>
+                <button id="clearLog" class="btn">Limpiar</button>
+            </div>
+            <pre id="log" class="log">Sistema inicializado.
+Esperando cambios en sensores...</pre>
+        </section>
+    </main>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

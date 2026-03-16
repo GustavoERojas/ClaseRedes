@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - Sistema de Monitoreo</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="auth">
+    <div class="auth-wrap">
+        <div class="auth-card">
+            <div class="auth-head">
+                <h1>Sistema de Monitoreo</h1>
+                <p>Ingresa con tus credenciales</p>
+            </div>
+
+            <form method="POST" class="auth-form">
+                <label for="username">Usuario</label>
+                <input type="text" id="username" name="username" value="admin" required>
+
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" name="password" value="1234" required>
+
+                <button type="submit" class="auth-btn">Iniciar Sesión</button>
+            </form>
+
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+
+            <div style="margin-top: 20px; text-align: center; color: var(--muted); font-size: 13px;">
+                Usuario: admin | Contraseña: 1234
+            </div>
+        </div>
+    </div>
+</body>
+</html>
