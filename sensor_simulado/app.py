@@ -5,7 +5,7 @@ import time
 # Configuración
 APP_USER = "########################"
 APP_PW_HASH ='#########################'
-SECRET_KEY = "CLAVE_SECRETA_SENSORES"
+SECRET_KEY = "############################"
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
