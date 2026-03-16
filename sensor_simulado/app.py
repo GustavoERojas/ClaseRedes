@@ -3,8 +3,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import time
 
 # Configuración
-APP_USER = "admin"
-APP_PW_HASH = generate_password_hash("1234")  # Contraseña: 1234
+APP_USER = "########################"
+APP_PW_HASH ='#########################'
 SECRET_KEY = "CLAVE_SECRETA_SENSORES"
 
 app = Flask(__name__)
