@@ -15,8 +15,8 @@ except:
     arduino = None
 
 # 🔐 LOGIN
-USER = "admin"
-PASSWORD_HASH = "scrypt:32768:8:1$fJBGT1vXjplpTKs4$31608a996a71fee1935865c481cb59268bde99dda64bcb59ef6c212affd6882cf0b01f2c66a554dfd12605031abc9a816fe783e0adb7c800f4bf0fec198b66c0"
+USER = "*********"
+PASSWORD_HASH = "*******************"
 
 from werkzeug.security import check_password_hash
 
