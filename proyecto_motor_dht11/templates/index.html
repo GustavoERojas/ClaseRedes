@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Control System | Motor DC con IoT</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">
+        <div class="connection-dot" id="connectionDot"></div>
+        <span id="connectionText">Conectando...</span>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>⚡ SMART CONTROL SYSTEM</h1>
+            <p>Monitoreo Inteligente | Control de Motor DC por Humedad</p>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <h2>🌡️ TEMPERATURA</h2>
+                <div class="value">
+                    <span id="temp">--</span>
+                    <span class="unit">°C</span>
+                </div>
+                <div class="tooltip">Temperatura ambiente actual</div>
+            </div>
+
+            <div class="card">
+                <h2>💧 HUMEDAD</h2>
+                <div class="value">
+                    <span id="hum">--</span>
+                    <span class="unit">%</span>
+                </div>
+                <div class="tooltip">Factor principal de control del motor</div>
+            </div>
+
+            <div class="card motor-status">
+                <h2>🎯 RANGO ACTIVO</h2>
+                <div class="value">
+                    <span id="rango">--</span>
+                </div>
+                <div class="leds-container" id="ledsContainer">
+                    <div class="led">
+                        <div class="led-light led-off" id="ledSeco"></div>
+                        <div class="led-label">SECO</div>
+                        <div class="led-status" id="ledSecoStatus">&lt; 40%</div>
+                    </div>
+                    <div class="led">
+                        <div class="led-light led-off" id="ledModerado"></div>
+                        <div class="led-label">MODERADO</div>
+                        <div class="led-status" id="ledModeradoStatus">40-70%</div>
+                    </div>
+                    <div class="led">
+                        <div class="led-light led-off" id="ledHumedo"></div>
+                        <div class="led-label">HÚMEDO</div>
+                        <div class="led-status" id="ledHumedoStatus">&gt; 70%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🎮 VELOCIDAD MOTOR</h2>
+                <div class="value">
+                    <span id="pwm">--</span>
+                    <span class="unit">/ 255</span>
+                </div>
+                <div class="pwm-container">
+                    <div class="pwm-bar">
+                        <div class="pwm-fill" id="pwmFill" style="width: 0%">0%</div>
+                    </div>
+                </div>
+                <div class="led" style="margin-top: 15px;">
+                    <div class="led-light led-off" id="ledMotor"></div>
+                    <div class="led-label">ESTADO MOTOR</div>
+                    <div class="led-status" id="ledMotorStatus">Detenido</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-header">
+                <h3>📈 HISTORIAL EN TIEMPO REAL</h3>
+                <div class="chart-controls">
+                    <button class="chart-btn active" onclick="setChartRange(10)">10s</button>
+                    <button class="chart-btn" onclick="setChartRange(30)">30s</button>
+                    <button class="chart-btn" onclick="setChartRange(60)">60s</button>
+                    <button class="chart-btn" onclick="clearChart()">Limpiar</button>
+                </div>
+            </div>
+            <canvas id="realtimeChart"></canvas>
+        </div>
+
+        <div class="indicators">
+            <div class="indicator">
+                <h3>📊 NIVEL DE HUMEDAD</h3>
+                <div class="circle-progress" id="humidityCircle">
+                    <svg width="180" height="180">
+                        <circle class="bg" cx="90" cy="90" r="45" stroke="currentColor" fill="none"/>
+                        <circle class="fill" cx="90" cy="90" r="45" stroke="currentColor" fill="none"/>
+                    </svg>
+                    <div class="percentage" id="humidityPercent">0%</div>
+                </div>
+            </div>
+
+            <div class="indicator">
+                <h3>⚡ POTENCIA MOTOR</h3>
+                <div class="circle-progress" id="motorCircle">
+                    <svg width="180" height="180">
+                        <circle class="bg" cx="90" cy="90" r="45" stroke="currentColor" fill="none"/>
+                        <circle class="fill" cx="90" cy="90" r="45" stroke="currentColor" fill="none"/>
+                    </svg>
+                    <div class="percentage" id="motorPercent">0%</div>
+                </div>
+            </div>
+
+            <div class="indicator">
+                <h3>🔧 EFICIENCIA</h3>
+                <div class="circle-progress" id="efficiencyCircle">
+                    <svg width="180" height="180">
+                        <circle class="bg" cx="90" cy="90" r="45" stroke="currentColor" fill="none"/>
+                        <circle class="fill" cx="90" cy="90" r="45" stroke="currentColor" fill="none"/>
+                    </svg>
+                    <div class="percentage" id="efficiencyPercent">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>🚀 Sistema de Control Inteligente v3.0 | IoT & Real-time Monitoring</p>
+            <p>Velocidad del motor regulada por humedad ambiental | Datos actualizados cada 2 segundos</p>
+            <a href="/logout" class="logout-btn">🔒 Cerrar Sesión</a>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
