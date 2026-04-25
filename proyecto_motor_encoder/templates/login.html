@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Control | Acceso</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="login-container">
+    <div class="login-card">
+        <div style="font-size: 48px; margin-bottom: 16px;">⚡</div>
+        <h1>Quantum Control</h1>
+        <p style="color: #9ca3af;">Sistema de control industrial</p>
+
+        {% if error %}
+            <div class="error-box">
+                ⚠ {{ error }}
+            </div>
+        {% endif %}
+
+        <form method="POST" action="/login">
+            <input 
+                type="text"
+                name="username"
+                placeholder="Usuario"
+                required
+                autofocus
+            >
+            
+            <input 
+                type="password"
+                name="password"
+                placeholder="Contraseña"
+                required
+            >
+
+            <button type="submit">
+                Acceder al sistema
+            </button>
+        </form>
+        
+        <div style="margin-top: 24px; font-size: 11px; color: #6b7280;">
+            🔒 Acceso restringido | Sistema certificado
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

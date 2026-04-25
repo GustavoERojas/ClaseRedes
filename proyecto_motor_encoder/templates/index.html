@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Control | Sistema de Motor Industrial</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="dashboard-container">
+    <!-- Header -->
+    <div class="glass-header">
+        <div class="header-content">
+            <div class="logo-area">
+                <h1>⚡ QUANTUM CONTROL</h1>
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span>Sistema Operativo</span>
+                </div>
+            </div>
+            <a href="/logout" class="logout-btn">┃ Cerrar sesión ┃</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- KPI Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon">🎮</div>
+                <div class="kpi-label">COMANDO ACTIVO</div>
+                <div class="kpi-value"><span id="cmd-value">P</span></div>
+            </div>
+            
+            <div class="kpi-card">
+                <div class="kpi-icon">📊</div>
+                <div class="kpi-label">PULSOS TOTALES</div>
+                <div class="kpi-value"><span id="pulsos-value">0</span></div>
+            </div>
+            
+            <div class="kpi-card">
+                <div class="kpi-icon">🔄</div>
+                <div class="kpi-label">VUELTAS</div>
+                <div class="kpi-value"><span id="vueltas-value">0.0000</span></div>
+            </div>
+            
+            <div class="kpi-card">
+                <div class="kpi-icon">⚙️</div>
+                <div class="kpi-label">RPM ACTUALES</div>
+                <div class="kpi-value">
+                    <span id="rpm-value">0.0</span>
+                    <span class="kpi-unit">RPM</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-section">
+            <div class="section-title">
+                <i>⌨️</i> Panel de Control
+            </div>
+            <div class="control-buttons">
+                <button onclick="enviarComando('A')" class="ctrl-btn btn-forward">
+                    ▶ Adelante
+                </button>
+                <button onclick="enviarComando('R')" class="ctrl-btn btn-reverse">
+                    ◀ Reversa
+                </button>
+                <button onclick="enviarComando('P')" class="ctrl-btn btn-stop">
+                    ■ Paro
+                </button>
+                <button onclick="enviarComando('Z')" class="ctrl-btn btn-reset">
+                    ↺ Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="chart-section">
+            <div class="section-title">
+                <i>📈</i> Monitoreo de RPM
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="rpmChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Monitor -->
+        <div class="monitor-section">
+            <div class="monitor-header">
+                <div class="section-title" style="margin-bottom: 0; border-bottom: none;">
+                    <i>📟</i> Serial Monitor
+                </div>
+                <div class="monitor-badge">LIVE</div>
+            </div>
+            <div class="monitor-content" id="monitor">
+                <div class="monitor-line">[---] Sistema inicializado</div>
+                <div class="monitor-line">[---] Esperando datos del Arduino...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
