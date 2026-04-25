@@ -6,9 +6,9 @@ import time
 app = Flask(__name__)
 app.secret_key = "REDES"
 
-APP_USER = "admin"
+APP_USER = "*****"
 
-APP_PW_HASH = "scrypt:32768:8:1$fJBGT1vXjplpTKs4$31608a996a71fee1935865c481cb59268bde99dda64bcb59ef6c212affd6882cf0b01f2c66a554dfd12605031abc9a816fe783e0adb7c800f4bf0fec198b66c0"
+APP_PW_HASH = "****************************************"
 
 arduino = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
 time.sleep(2)
