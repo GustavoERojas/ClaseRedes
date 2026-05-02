@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Control | Sistema PID</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="dashboard">
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">QUANTUM CONTROL</span>
+                <span class="badge">PID ACTIVO</span>
+            </div>
+            <div class="header-right">
+                <div class="connection-status">
+                    <span class="status-led"></span>
+                    <span>Online</span>
+                </div>
+                <a href="/logout" class="logout-btn">Cerrar</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="row-2cols">
+            <div class="card control-card">
+                <div class="card-header">
+                    <span class="card-icon">🎮</span>
+                    <h2>Control</h2>
+                </div>
+                <div class="button-panel">
+                    <button onclick="enviarComando('A')" class="btn btn-forward">
+                        <span class="btn-icon">▶</span>
+                        <span>ADELANTE</span>
+                    </button>
+                    <button onclick="enviarComando('P')" class="btn btn-stop">
+                        <span class="btn-icon">■</span>
+                        <span>PARO</span>
+                    </button>
+                    <button onclick="resetContador()" class="btn btn-reset">
+                        <span class="btn-icon">↺</span>
+                        <span>RESET</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card reference-card">
+                <div class="card-header">
+                    <span class="card-icon">🎯</span>
+                    <h2>Referencia</h2>
+                </div>
+                <div class="reference-control">
+                    <div class="reference-input-group">
+                        <div class="input-wrapper">
+                            <input type="number" id="referencia-input" placeholder="0" step="10" value="0">
+                            <button onclick="setReferencia()" class="btn-apply">Aplicar</button>
+                        </div>
+                    </div>
+                    <div class="reference-display">
+                        <div class="ref-stat">
+                            <span class="ref-label">Objetivo</span>
+                            <span class="ref-value" id="referencia-value">0</span>
+                            <span class="ref-unit">RPM</span>
+                        </div>
+                        <div class="ref-stat">
+                            <span class="ref-label">Error</span>
+                            <span class="ref-value" id="error_pct-value">0</span>
+                            <span class="ref-unit">%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <span class="stat-icon">⚙️</span>
+                <div class="stat-info">
+                    <span class="stat-label">RPM</span>
+                    <span class="stat-value" id="rpm-value">0</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">🔄</span>
+                <div class="stat-info">
+                    <span class="stat-label">Estado</span>
+                    <span class="stat-value" id="estado-value">PARO</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">📊</span>
+                <div class="stat-info">
+                    <span class="stat-label">Pulsos</span>
+                    <span class="stat-value" id="pulsos-value">0</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">📈</span>
+                <div class="stat-info">
+                    <span class="stat-label">Vueltas</span>
+                    <span class="stat-value" id="vueltas-value">0.000</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">🎛️</span>
+                <div class="stat-info">
+                    <span class="stat-label">PWM</span>
+                    <span class="stat-value" id="pwm-value">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row-2cols">
+            <div class="card chart-card">
+                <div class="card-header">
+                    <span class="card-icon">📈</span>
+                    <h2>Monitoreo RPM</h2>
+                    <span class="chart-badge">Real vs Referencia</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="rpmChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card info-card">
+                <div class="card-header">
+                    <span class="card-icon">🚦</span>
+                    <h2>Indicadores</h2>
+                </div>
+                <div class="info-content">
+                    <div class="semaforo-section">
+                        <div class="semaforo-leds" id="semaforo-leds">
+                            <div class="led led-rojo"></div>
+                            <div class="led led-amarillo"></div>
+                            <div class="led led-verde"></div>
+                        </div>
+                        <div class="semaforo-message" id="semaforo-message">⚪ Esperando referencia</div>
+                    </div>
+                    
+                    <div class="pid-compact">
+                        <div class="pid-params">
+                            <span>KP=0.20</span>
+                            <span>KI=0.15</span>
+                            <span>KD=0.008</span>
+                        </div>
+                        <div class="pid-bars">
+                            <div class="pwm-bar-bg">
+                                <div class="pwm-bar-fill" id="pwm-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="pid-stats">
+                            <div class="pid-stat">
+                                <span>Error:</span>
+                                <strong id="error-value">0.0</strong>
+                                <span>RPM</span>
+                            </div>
+                            <div class="pid-stat">
+                                <span>Integral:</span>
+                                <strong id="integral-value">0.0</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card monitor-card">
+            <div class="card-header">
+                <span class="card-icon">📟</span>
+                <h2>Serial Monitor</h2>
+                <span class="monitor-badge">LIVE</span>
+            </div>
+            <div class="monitor-content" id="monitor">
+                <div class="monitor-line">[---] Sistema inicializado</div>
+                <div class="monitor-line">[---] Control PID activo</div>
+                <div class="monitor-line">[---] Establezca una referencia</div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
