@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial Color Sorter | Sistema de Clasificación</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="dashboard">
+    <!-- Header Profesional -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🏭</span>
+                <div>
+                    <span class="logo-text">INDUSTRIAL COLOR SORTER</span>
+                    <span class="logo-subtitle">Sistema de Clasificación por Color</span>
+                </div>
+                <span class="badge">PRODUCCIÓN ACTIVA</span>
+            </div>
+            <div class="header-right">
+                <div class="connection-status">
+                    <span class="status-led"></span>
+                    <span>PLC CONECTADO</span>
+                </div>
+                <a href="/logout" class="logout-btn">
+                    <span>🔒</span> CERRAR SESIÓN
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <!-- Fila 1: Panel de Control y Contadores -->
+        <div class="row-2cols">
+            <!-- Panel de Control -->
+            <div class="card control-card">
+                <div class="card-header">
+                    <span class="card-icon">🎮</span>
+                    <h2>CONTROL DE BANDA</h2>
+                    <span class="card-badge">Manual</span>
+                </div>
+                <div class="button-panel">
+                    <button onclick="enviarComando('A')" class="btn btn-forward">
+                        <span class="btn-icon">▶</span>
+                        <span>AVANCE</span>
+                    </button>
+                    <button onclick="enviarComando('P')" class="btn btn-stop">
+                        <span class="btn-icon">■</span>
+                        <span>PARO</span>
+                    </button>
+                    <button onclick="resetContador()" class="btn btn-reset">
+                        <span class="btn-icon">↺</span>
+                        <span>RESET ENCODER</span>
+                    </button>
+                    <button onclick="resetContadores()" class="btn btn-counters">
+                        <span class="btn-icon">📊</span>
+                        <span>RESET CONTADORES</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contadores de Producción -->
+            <div class="card counters-card">
+                <div class="card-header">
+                    <span class="card-icon">📊</span>
+                    <h2>CONTADORES DE PRODUCCIÓN</h2>
+                    <span class="card-badge">Tiempo Real</span>
+                </div>
+                <div class="counters-container">
+                    <div class="counter-good">
+                        <div class="counter-icon">✅</div>
+                        <div class="counter-info">
+                            <span class="counter-label">PIEZAS APTAS</span>
+                            <span class="counter-value" id="piezas-buenas">0</span>
+                        </div>
+                    </div>
+                    <div class="counter-bad">
+                        <div class="counter-icon">❌</div>
+                        <div class="counter-info">
+                            <span class="counter-label">PIEZAS RECHAZADAS</span>
+                            <span class="counter-value" id="piezas-malas">0</span>
+                        </div>
+                    </div>
+                    <div class="counter-total">
+                        <div class="counter-icon">📦</div>
+                        <div class="counter-info">
+                            <span class="counter-label">TOTAL PROCESADAS</span>
+                            <span class="counter-value" id="piezas-total">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="quality-indicator" id="quality-indicator">
+                    <span>📈 Calidad: </span>
+                    <span id="calidad-porcentaje">0</span>
+                    <span>%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fila 2: Sensor de Color y Simulación 3D -->
+        <div class="row-2cols">
+            <!-- Sensor de Color -->
+            <div class="card sensor-card">
+                <div class="card-header">
+                    <span class="card-icon">🎨</span>
+                    <h2>SENSOR DE COLOR</h2>
+                    <span class="card-badge">TCS3200</span>
+                </div>
+                <div class="sensor-content">
+                    <div class="color-indicator" id="color-indicator">
+                        <div class="color-preview" id="color-preview"></div>
+                        <div class="color-info">
+                            <span class="color-label">Color Detectado:</span>
+                            <span class="color-value" id="color-detectado">---</span>
+                        </div>
+                    </div>
+                    <div class="rgb-values">
+                        <div class="rgb-bar">
+                            <span>🔴 ROJO</span>
+                            <div class="rgb-bar-bg">
+                                <div class="rgb-bar-fill" id="rojo-bar" style="width: 0%"></div>
+                            </div>
+                            <span id="rojo-valor">0</span>
+                        </div>
+                        <div class="rgb-bar">
+                            <span>🟢 VERDE</span>
+                            <div class="rgb-bar-bg">
+                                <div class="rgb-bar-fill" id="verde-bar" style="width: 0%"></div>
+                            </div>
+                            <span id="verde-valor">0</span>
+                        </div>
+                        <div class="rgb-bar">
+                            <span>🔵 AZUL</span>
+                            <div class="rgb-bar-bg">
+                                <div class="rgb-bar-fill" id="azul-bar" style="width: 0%"></div>
+                            </div>
+                            <span id="azul-valor">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulación 3D (placeholder para SolidWorks) -->
+            <div class="card simulation-card">
+                <div class="card-header">
+                    <span class="card-icon">🎬</span>
+                    <h2>SIMULACIÓN 3D - BANDA TRANSPORTADORA</h2>
+                    <span class="card-badge">SolidWorks Integration</span>
+                </div>
+                <div class="simulation-container" id="simulation-container">
+                    <div class="simulation-placeholder">
+                        <div class="placeholder-icon">🏭</div>
+                        <div class="placeholder-text">
+                            <h3>Visualización 3D de la Banda</h3>
+                            <p>Integración con modelo de SolidWorks</p>
+                            <p class="placeholder-note">* El modelo 3D se cargará automáticamente al recibir el archivo de simulación</p>
+                        </div>
+                    </div>
+                    <!-- Aquí se cargará el modelo 3D de SolidWorks -->
+                    <canvas id="solidworks-canvas" style="display: none;"></canvas>
+                </div>
+                <div class="simulation-status">
+                    <span class="status-dot"></span>
+                    <span>Esperando integración 3D...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fila 3: Gráfica y Estadísticas PID -->
+        <div class="row-2cols">
+            <!-- Gráfica de RPM -->
+            <div class="card chart-card">
+                <div class="card-header">
+                    <span class="card-icon">📈</span>
+                    <h2>MONITOREO DE VELOCIDAD</h2>
+                    <span class="chart-badge">RPM Real vs Referencia</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="rpmChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Panel PID y Semáforo -->
+            <div class="card pid-card">
+                <div class="card-header">
+                    <span class="card-icon">🎛️</span>
+                    <h2>CONTROL PID</h2>
+                    <div class="pid-params">KP=0.20 | KI=0.15 | KD=0.008</div>
+                </div>
+                <div class="pid-content">
+                    <div class="semaforo-section">
+                        <div class="semaforo-leds" id="semaforo-leds">
+                            <div class="led led-rojo"></div>
+                            <div class="led led-amarillo"></div>
+                            <div class="led led-verde"></div>
+                        </div>
+                        <div class="semaforo-message" id="semaforo-message">⚪ Sistema listo</div>
+                    </div>
+                    
+                    <div class="stats-row-mini">
+                        <div class="stat-mini">
+                            <span>RPM Actual</span>
+                            <strong id="rpm-value">0</strong>
+                        </div>
+                        <div class="stat-mini">
+                            <span>Referencia</span>
+                            <strong id="referencia-value">0</strong>
+                        </div>
+                        <div class="stat-mini">
+                            <span>Error</span>
+                            <strong id="error-value" style="color: #f59e0b;">0.0</strong>
+                        </div>
+                    </div>
+
+                    <div class="pwm-control">
+                        <div class="pwm-label">
+                            <span>PWM APLICADO</span>
+                            <span id="pwm-value">0</span>
+                            <span>/ 255</span>
+                        </div>
+                        <div class="pwm-bar-bg">
+                            <div class="pwm-bar-fill" id="pwm-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="pid-details">
+                        <div class="pid-detail">
+                            <span>Error Integral:</span>
+                            <strong id="integral-value">0.0</strong>
+                        </div>
+                        <div class="pid-detail">
+                            <span>Estado Motor:</span>
+                            <strong id="estado-value">PARO</strong>
+                        </div>
+                        <div class="pid-detail">
+                            <span>Pulsos:</span>
+                            <strong id="pulsos-value">0</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fila 4: Monitor Serial -->
+        <div class="card monitor-card">
+            <div class="card-header">
+                <span class="card-icon">📟</span>
+                <h2>MONITOR DE COMUNICACIÓN</h2>
+                <span class="monitor-badge">SERIAL LIVE</span>
+                <button onclick="clearMonitor()" class="monitor-clear">LIMPIAR</button>
+            </div>
+            <div class="monitor-content" id="monitor">
+                <div class="monitor-line system">[🏭] Sistema Industrial Color Sorter iniciado</div>
+                <div class="monitor-line system">[🎛️] Control PID activo - Parámetros cargados</div>
+                <div class="monitor-line system">[🎨] Sensor TCS3200 calibrado</div>
+                <div class="monitor-line system">[✅] Esperando detección de piezas...</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <span>🏭 Industrial Color Sorter v2.0</span>
+            <span>|</span>
+            <span>📊 Control PID en tiempo real</span>
+            <span>|</span>
+            <span>🎨 Tecnología TCS3200</span>
+            <span>|</span>
+            <span>© 2024 - Proyecto Integrador</span>
+        </div>
+    </footer>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Industrial Color Sorter | Acceso</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-icon">🏭</div>
+        <h1>Industrial Color Sorter</h1>
+        <p class="login-subtitle">Sistema de clasificación por color con control PID</p>
+        
+        {% if error %}
+            <div class="error-box">⚠️ {{ error }}</div>
+        {% endif %}
+        
+        <form method="POST" action="/login">
+            <input type="text" name="username" placeholder="Usuario" required autofocus>
+            <input type="password" name="password" placeholder="Contraseña" required>
+            <button type="submit">Acceder al sistema</button>
+        </form>
+        
+        <div class="login-footer">
+            <span>🔒 Sistema certificado ISO 9001</span>
+            <span>|</span>
+            <span>📊 Control PID en tiempo real</span>
+        </div>
+    </div>
+</div>
+</body>
+</html>
