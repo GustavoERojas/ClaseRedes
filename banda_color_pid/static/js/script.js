@@ -3,22 +3,105 @@ let rpmHistory = [];
 let referenciaHistory = [];
 let isUpdating = false;
 
+// ================= SIMULACIÓN 3D CON VIDEO =================
+let videoElement = null;
+let videoDireccion = 'adelante';
+
+function initSimulacion() {
+    videoElement = document.getElementById('simulacionVideo');
+    console.log("initSimulacion - videoElement:", videoElement);
+    
+    if (videoElement) {
+        videoElement.style.display = 'block';
+        videoElement.style.width = '100%';
+        videoElement.playbackRate = 1.0;
+        videoElement.muted = true;
+        
+        videoElement.play().then(() => {
+            console.log("Video reproduciendo");
+            setVideoDireccion('adelante');
+        }).catch(e => {
+            console.log("Error reproduciendo:", e);
+        });
+        
+        videoElement.addEventListener('ended', function() {
+            if (videoDireccion !== 'stop') {
+                videoElement.currentTime = 0;
+                videoElement.play();
+            }
+        });
+    }
+}
+
+function setVideoDireccion(direccion) {
+    if (!videoElement) return;
+    
+    videoDireccion = direccion;
+    const statusSpan = document.querySelector('#simulacion-status span:last-child');
+    
+    if (direccion === 'stop') {
+        videoElement.pause();
+        if (statusSpan) statusSpan.innerHTML = '⏹️ Banda DETENIDA';
+    } 
+    else if (direccion === 'adelante') {
+        videoElement.style.transform = 'scaleX(1)';
+        videoElement.play();
+        if (statusSpan) statusSpan.innerHTML = '→ Banda en movimiento ADELANTE';
+    }
+    else if (direccion === 'atras') {
+        videoElement.style.transform = 'scaleX(-1)';
+        videoElement.play();
+        if (statusSpan) statusSpan.innerHTML = '← Banda en movimiento REVERSA';
+    }
+}
+
+function videoAdelante() {
+    setVideoDireccion('adelante');
+}
+
+function videoAtras() {
+    setVideoDireccion('atras');
+}
+
+function videoStop() {
+    setVideoDireccion('stop');
+}
+
+function sincronizarVideoConMotor(estadoMotor, rpm) {
+    if (!videoElement) return;
+    
+    console.log("Estado motor:", estadoMotor, "RPM:", rpm);
+    
+    if (estadoMotor === 'PARO' || rpm === 0) {
+        if (videoDireccion !== 'stop') {
+            setVideoDireccion('stop');
+        }
+    } 
+    else if (estadoMotor === 'DERECHA') {
+        if (videoDireccion !== 'adelante') {
+            setVideoDireccion('adelante');
+        }
+        let velocidad = Math.min(1.5, Math.max(0.5, Math.abs(rpm) / 50));
+        videoElement.playbackRate = velocidad;
+        console.log("Video adelante velocidad:", velocidad);
+    }
+    else if (estadoMotor === 'IZQUIERDA') {
+        if (videoDireccion !== 'atras') {
+            setVideoDireccion('atras');
+        }
+        let velocidad = Math.min(1.5, Math.max(0.5, Math.abs(rpm) / 50));
+        videoElement.playbackRate = velocidad;
+        console.log("Video reversa velocidad:", velocidad);
+    }
+}
+
 function getEstadoDisplay(estado) {
     const nombres = {
-        'DERECHA': 'AVANCE',
+        'DERECHA': 'ADELANTE',
         'IZQUIERDA': 'REVERSA',
         'PARO': 'DETENIDO'
     };
     return nombres[estado] || estado;
-}
-
-function getColorDisplay(color) {
-    const colores = {
-        'VERDE': '✅ VERDE - PIEZA APTA',
-        'LADRILLO': '❌ LADRILLO - PIEZA RECHAZADA',
-        'DESCONOCIDO': '⚪ COLOR DESCONOCIDO'
-    };
-    return colores[color] || color;
 }
 
 async function enviarComando(cmd) {
@@ -37,7 +120,7 @@ async function enviarComando(cmd) {
         const result = await response.json();
         addMonitorMessage(result.mensaje, result.ok ? 'success' : 'error');
     } catch (error) {
-        addMonitorMessage('Error de conexión con el PLC', 'error');
+        addMonitorMessage('Error de conexión', 'error');
     }
 }
 
@@ -73,47 +156,28 @@ async function resetContadores() {
     }
 }
 
-async function setReferencia() {
-    const input = document.getElementById("referencia-input");
-    const valor = parseFloat(input.value);
-    
-    if (isNaN(valor)) {
-        addMonitorMessage('Ingrese un valor de RPM válido', 'error');
-        return;
-    }
-    
-    try {
-        const response = await fetch("/api/set_referencia", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rpm_referencia: valor })
-        });
-        const data = await response.json();
-        if (data.ok) {
-            document.getElementById("referencia-value").innerText = data.rpm_referencia.toFixed(0);
-            addMonitorMessage(data.mensaje, 'success');
-        }
-    } catch (error) {
-        addMonitorMessage('Error al establecer referencia', 'error');
-    }
-}
-
 function addMonitorMessage(message, type = 'info') {
     const monitor = document.getElementById("monitor");
     if (!monitor) return;
     
     const timestamp = new Date().toLocaleTimeString();
+    const colors = { success: '#10b981', error: '#ef4444', info: '#06b6d4', system: '#8b5cf6' };
     const icons = { success: '✅', error: '❌', info: '📡', system: '🏭' };
     const icon = icons[type] || '📡';
     
     const line = document.createElement('div');
     line.className = `monitor-line ${type}`;
+    line.style.color = colors[type] || colors.info;
     line.innerHTML = `<span class="monitor-time">[${timestamp}]</span> ${icon} ${message}`;
     
     monitor.appendChild(line);
-    line.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     
-    while (monitor.children.length > 150) {
+    const isScrolledToBottom = monitor.scrollHeight - monitor.clientHeight <= monitor.scrollTop + 50;
+    if (isScrolledToBottom) {
+        line.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    
+    while (monitor.children.length > 100) {
         monitor.removeChild(monitor.firstChild);
     }
 }
@@ -245,7 +309,6 @@ function updateSensorColor(color, rojo, verde, azul) {
     const verdeValor = document.getElementById('verde-valor');
     const azulValor = document.getElementById('azul-valor');
     
-    // Normalizar valores (0-255)
     const rNorm = Math.min(100, (rojo / 100) * 100);
     const gNorm = Math.min(100, (verde / 100) * 100);
     const bNorm = Math.min(100, (azul / 100) * 100);
@@ -259,18 +322,24 @@ function updateSensorColor(color, rojo, verde, azul) {
     if (azulValor) azulValor.innerText = azul;
     
     if (colorDetectado) {
-        colorDetectado.innerText = getColorDisplay(color);
         if (color === 'VERDE') {
-            colorPreview.style.background = '#10b981';
-            colorPreview.style.boxShadow = '0 0 20px #10b981';
-            addMonitorMessage(`🎨 Pieza VERDE detectada - Producto apto`, 'success');
+            colorDetectado.innerText = '✅ VERDE - PIEZA APTA';
+            if (colorPreview) {
+                colorPreview.style.background = '#10b981';
+                colorPreview.style.boxShadow = '0 0 20px #10b981';
+            }
         } else if (color === 'LADRILLO') {
-            colorPreview.style.background = '#cd5c5c';
-            colorPreview.style.boxShadow = '0 0 20px #cd5c5c';
-            addMonitorMessage(`🔴 PIEZA RECHAZADA - Color LADRILLO detectado`, 'error');
+            colorDetectado.innerText = '❌ LADRILLO - PIEZA RECHAZADA';
+            if (colorPreview) {
+                colorPreview.style.background = '#cd5c5c';
+                colorPreview.style.boxShadow = '0 0 20px #cd5c5c';
+            }
         } else {
-            colorPreview.style.background = '#6b7280';
-            colorPreview.style.boxShadow = 'none';
+            colorDetectado.innerText = '⚪ COLOR DESCONOCIDO';
+            if (colorPreview) {
+                colorPreview.style.background = '#6b7280';
+                colorPreview.style.boxShadow = 'none';
+            }
         }
     }
 }
@@ -332,7 +401,7 @@ async function actualizarDatos() {
             updateKPI('rpm', data.rpm.toFixed(0));
             updateKPI('estado', getEstadoDisplay(data.estado));
             updateKPI('pulsos', data.pulsos.toLocaleString());
-            updateKPI('referencia', data.referencia.toFixed(0));
+            updateKPI('vueltas', data.vueltas.toFixed(3));
             updateKPI('error', data.error.toFixed(1));
             updateKPI('pwm', data.pwm);
             updateKPI('integral', data.integral.toFixed(1));
@@ -346,6 +415,7 @@ async function actualizarDatos() {
             updateSensorColor(data.color, data.rojo, data.verde, data.azul);
             updateCounters(data.piezas_buenas, data.piezas_malas);
             updateCharts(data.rpm, data.referencia);
+            sincronizarVideoConMotor(data.estado, data.rpm);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -356,18 +426,13 @@ async function actualizarDatos() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initChart();
+    initSimulacion();
     actualizarDatos();
-    setInterval(actualizarDatos, 250);
-    
-    const refInput = document.getElementById("referencia-input");
-    if (refInput) {
-        refInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") setReferencia();
-        });
-    }
+    setInterval(actualizarDatos, 500);
     
     addMonitorMessage('Sistema Industrial Color Sorter iniciado correctamente', 'system');
-    addMonitorMessage('Control PID activo - Esperando detección de piezas', 'system');
+    addMonitorMessage('Control PID activo - Banda a 35 RPM', 'system');
+    addMonitorMessage('Video de simulación cargado', 'system');
 });
 
 let resizeTimeout;
