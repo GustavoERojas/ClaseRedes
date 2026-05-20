@@ -9,8 +9,8 @@ import re
 app = Flask(__name__)
 app.secret_key = "REDES_INDUSTRIALES_2024"
 
-APP_USER = "*****"
-APP_PW_HASH = "***********"
+APP_USER = "admin"
+APP_PW_HASH = "scrypt:32768:8:1$fJBGT1vXjplpTKs4$31608a996a71fee1935865c481cb59268bde99dda64bcb59ef6c212affd6882cf0b01f2c66a554dfd12605031abc9a816fe783e0adb7c800f4bf0fec198b66c0"
 
 # ========== CONEXIÓN SERIAL ==========
 arduino = None
@@ -52,7 +52,7 @@ ultimo_estado = {
     "error_pct": 0.0,
     "pwm": 0,
     "integral": 0.0,
-    "semaforo": "ROJO",
+    "semaforo": "VERDE",
     "color": "DESCONOCIDO",
     "rojo": 0,
     "verde": 0,
@@ -62,7 +62,6 @@ ultimo_estado = {
     "raw": "Esperando datos..."
 }
 
-# ========== FUNCIONES ==========
 def is_logged_in():
     return session.get("logged_in", False)
 
@@ -163,7 +162,7 @@ def api_data():
         return jsonify({"ok": False})
     
     if arduino and arduino.is_open:
-        enviar_comando_arduino("GET_STATUS")
+        enviar_comando_arduino("G")
         time.sleep(0.05)
         leer_serial()
 
@@ -213,14 +212,15 @@ def control():
     data = request.get_json()
     comando = data.get("comando", "")
 
-    comandos_map = {
-        "A": "RIGHT",
-        "P": "STOP"
-    }
-    
-    if comando in comandos_map:
-        enviar_comando_arduino(comandos_map[comando])
-        return jsonify({"ok": True, "mensaje": f"Comando {comando} enviado"})
+    if comando == "R":  # Reiniciar motor
+        enviar_comando_arduino("R")
+        return jsonify({"ok": True, "mensaje": "Motor reiniciado"})
+    elif comando == "P":  # Paro emergencia
+        enviar_comando_arduino("S")
+        return jsonify({"ok": True, "mensaje": "Paro de emergencia"})
+    elif comando == "Z":  # Reset contadores
+        enviar_comando_arduino("C")
+        return jsonify({"ok": True, "mensaje": "Reset contadores"})
 
     return jsonify({"ok": False, "error": "Comando inválido"})
 
@@ -229,16 +229,17 @@ def reset():
     if not is_logged_in():
         return jsonify({"ok": False, "error": "No autorizado"})
     
-    enviar_comando_arduino("RESET")
-    return jsonify({"ok": True, "mensaje": "Contador de pulsos resetado"})
+    # Reiniciar motor y contadores
+    enviar_comando_arduino("R")
+    return jsonify({"ok": True, "mensaje": "Motor reiniciado"})
 
 @app.route("/api/reset_counters", methods=["POST"])
 def reset_counters():
     if not is_logged_in():
         return jsonify({"ok": False, "error": "No autorizado"})
     
-    enviar_comando_arduino("RESET_COUNTERS")
-    return jsonify({"ok": True, "mensaje": "Contadores de piezas reiniciados"})
+    enviar_comando_arduino("C")
+    return jsonify({"ok": True, "mensaje": "Contadores reiniciados"})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
