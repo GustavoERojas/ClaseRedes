@@ -139,8 +139,8 @@ body {
 .button-panel { display: flex; gap: 16px; padding: 20px 24px; }
 .btn { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 14px 20px; border: none; border-radius: 16px; font-weight: 700; font-size: 13px; cursor: pointer; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); flex: 1; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px; }
 .btn-icon { font-size: 18px; }
-.btn-forward { border-color: var(--green); color: var(--green); }
-.btn-forward:hover { background: var(--gradient-success); color: white; box-shadow: 0 5px 20px var(--green-glow); border-color: transparent; }
+.btn-start { border-color: var(--green); color: var(--green); }
+.btn-start:hover { background: var(--gradient-success); color: white; box-shadow: 0 5px 20px var(--green-glow); border-color: transparent; }
 .btn-stop { border-color: var(--red); color: var(--red); }
 .btn-stop:hover { background: var(--gradient-danger); color: white; box-shadow: 0 5px 20px var(--red-glow); border-color: transparent; }
 .btn-reset { border-color: var(--orange); color: var(--orange); }
@@ -170,29 +170,93 @@ body {
 .rgb-values { display: flex; flex-direction: column; gap: 12px; }
 .rgb-bar { display: flex; align-items: center; gap: 12px; font-size: 12px; }
 .rgb-bar-bg { flex: 1; height: 8px; background: var(--bg-primary); border-radius: 4px; overflow: hidden; }
-.rgb-bar-fill { height: 100%; border-radius: 4px; transition: width 0.1s ease; }
-.rgb-bar-fill { background: var(--gradient-primary); }
+.rgb-bar-fill { height: 100%; border-radius: 4px; transition: width 0.1s ease; background: var(--gradient-primary); }
 
-/* Simulación 3D */
-.simulation-container { 
-    min-height: 300px; 
-    background: linear-gradient(135deg, #0f1117, #0a0c10);
+/* ========== SIMULACIÓN 3D CON VIDEO ========== */
+.simulation-container {
     position: relative;
+    min-height: 320px;
+    background: #0a0c10;
     overflow: hidden;
 }
-.simulation-placeholder { 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    height: 300px; 
-    text-align: center; 
+
+.simulacion-video {
+    width: 100%;
+    height: 320px;
+    object-fit: contain;
+    background: #0a0c10;
 }
-.placeholder-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
-.placeholder-text h3 { font-size: 18px; margin-bottom: 8px; color: var(--text-secondary); }
-.placeholder-text p { font-size: 12px; color: var(--text-muted); }
-.placeholder-note { margin-top: 12px; font-size: 10px; font-style: italic; }
-.simulation-status { padding: 12px 24px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); }
+
+.simulation-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    padding: 20px;
+}
+
+.simulation-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-primary);
+    background: rgba(0,0,0,0.6);
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    backdrop-filter: blur(5px);
+}
+
+.simulation-controls {
+    display: flex;
+    gap: 12px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-secondary);
+}
+
+.sim-btn {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.sim-adelante {
+    border-color: #10b981;
+    color: #10b981;
+}
+.sim-adelante:hover {
+    background: #10b981;
+    color: white;
+}
+
+.sim-atras {
+    border-color: #f59e0b;
+    color: #f59e0b;
+}
+.sim-atras:hover {
+    background: #f59e0b;
+    color: white;
+}
+
+.sim-stop {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+.sim-stop:hover {
+    background: #ef4444;
+    color: white;
+}
 
 /* Gráfica */
 .chart-container { padding: 20px; height: 320px; position: relative; }
@@ -235,6 +299,9 @@ body {
 .monitor-badge { margin-left: auto; background: rgba(0, 180, 216, 0.15); color: var(--cyan); padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
 .monitor-clear { margin-left: 12px; background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-secondary); padding: 4px 12px; border-radius: 20px; font-size: 10px; cursor: pointer; transition: all 0.2s; }
 .monitor-clear:hover { background: var(--red); color: white; border-color: var(--red); }
+
+.control-info { margin: 0 24px 20px 24px; padding: 12px 16px; background: var(--bg-secondary); border-radius: 16px; border-left: 4px solid var(--cyan); }
+.info-text { font-size: 12px; color: var(--text-secondary); margin: 0; }
 
 /* Footer */
 .footer { background: var(--bg-secondary); border-top: 1px solid var(--border); margin-top: 24px; }
