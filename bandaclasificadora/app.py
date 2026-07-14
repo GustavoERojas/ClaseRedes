@@ -46,7 +46,7 @@ conectar_arduino()
 ultimo_estado = {
     "estado": "DETENIDO",
     "rpm": 0.0,
-    "referencia": 0.0,
+    "referencia": 55.0,
     "error": 0.0,
     "pwm": 0,
     "semaforo": "ROJO",
@@ -78,73 +78,126 @@ def leer_serial():
                 print(f"📡 {linea}")
                 ultimo_estado["raw"] = linea
                 ultimo_mensaje = linea
-
-                # Buscar el mensaje de estado principal
-                if "⚡ RPM:" in linea:
-                    try:
-                        rpm_match = re.search(r'RPM:\s*([\d\.]+)', linea)
-                        pwm_match = re.search(r'PWM:\s*(\d+)', linea)
-                        error_match = re.search(r'Error:\s*([-\d\.]+)', linea)
-                        piezas_match = re.search(r'📦:\s*(\d+)', linea)
-                        clasificadas_match = re.search(r'✅:\s*(\d+)', linea)
-                        azules_match = re.search(r'🔵:\s*(\d+)', linea)
-                        
-                        if rpm_match: ultimo_estado["rpm"] = float(rpm_match.group(1))
-                        if pwm_match: ultimo_estado["pwm"] = int(pwm_match.group(1))
-                        if error_match: ultimo_estado["error"] = float(error_match.group(1))
-                    except Exception as e:
-                        print(f"Error parseando: {e}")
-
-                # Buscar mensajes de detección de color
-                if "ROJO detectado" in linea:
-                    ultimo_estado["color_detectado"] = "ROJO"
-                    ultimo_estado["piezas_rojas"] += 1
-                    ultimo_estado["historial_colores"].insert(0, {"color": "ROJO", "tiempo": datetime.now().strftime("%H:%M:%S")})
-                    if len(ultimo_estado["historial_colores"]) > 10:
-                        ultimo_estado["historial_colores"].pop()
                 
-                elif "VERDE detectado" in linea:
-                    ultimo_estado["color_detectado"] = "VERDE"
-                    ultimo_estado["piezas_verdes"] += 1
-                    ultimo_estado["historial_colores"].insert(0, {"color": "VERDE", "tiempo": datetime.now().strftime("%H:%M:%S")})
-                    if len(ultimo_estado["historial_colores"]) > 10:
-                        ultimo_estado["historial_colores"].pop()
-                
-                elif "AZUL detectado" in linea:
-                    ultimo_estado["color_detectado"] = "AZUL"
-                    ultimo_estado["piezas_azules"] += 1
-                    ultimo_estado["historial_colores"].insert(0, {"color": "AZUL", "tiempo": datetime.now().strftime("%H:%M:%S")})
-                    if len(ultimo_estado["historial_colores"]) > 10:
-                        ultimo_estado["historial_colores"].pop()
-                
-                elif "Pieza manual:" in linea:
-                    if "ROJO" in linea:
-                        ultimo_estado["color_detectado"] = "ROJO"
-                        ultimo_estado["piezas_rojas"] += 1
-                        ultimo_estado["historial_colores"].insert(0, {"color": "ROJO", "tiempo": datetime.now().strftime("%H:%M:%S")})
-                        if len(ultimo_estado["historial_colores"]) > 10:
-                            ultimo_estado["historial_colores"].pop()
-                    elif "VERDE" in linea:
-                        ultimo_estado["color_detectado"] = "VERDE"
-                        ultimo_estado["piezas_verdes"] += 1
-                        ultimo_estado["historial_colores"].insert(0, {"color": "VERDE", "tiempo": datetime.now().strftime("%H:%M:%S")})
-                        if len(ultimo_estado["historial_colores"]) > 10:
-                            ultimo_estado["historial_colores"].pop()
-                    elif "AZUL" in linea:
-                        ultimo_estado["color_detectado"] = "AZUL"
-                        ultimo_estado["piezas_azules"] += 1
-                        ultimo_estado["historial_colores"].insert(0, {"color": "AZUL", "tiempo": datetime.now().strftime("%H:%M:%S")})
-                        if len(ultimo_estado["historial_colores"]) > 10:
-                            ultimo_estado["historial_colores"].pop()
-
-                # Buscar estado del sistema
-                if "Sistema DETENIDO" in linea:
+                # ============================================================
+                # 1. DETECTAR ESTADO DEL SISTEMA (Mensajes en español)
+                # ============================================================
+                if "SISTEMA DETENIDO" in linea:
                     ultimo_estado["estado"] = "DETENIDO"
                 elif "PRODUCCIÓN INICIADA" in linea:
                     ultimo_estado["estado"] = "PRODUCIENDO"
                 elif "Sistema pausado" in linea:
                     ultimo_estado["estado"] = "PAUSADO"
-
+                elif "Sistema reanudado" in linea:
+                    ultimo_estado["estado"] = "PRODUCIENDO"
+                
+                # ============================================================
+                # 2. EXTRAER RPM, PWM, ERROR de mensajes como:
+                #    "⚡ RPM: 52.3 | PWM: 100 | Error: 2.7"
+                # ============================================================
+                rpm_match = re.search(r'RPM:\s*([\d\.]+)', linea)
+                if rpm_match:
+                    ultimo_estado["rpm"] = float(rpm_match.group(1))
+                
+                pwm_match = re.search(r'PWM:\s*(\d+)', linea)
+                if pwm_match:
+                    ultimo_estado["pwm"] = int(pwm_match.group(1))
+                
+                error_match = re.search(r'Error:\s*([-\d\.]+)', linea)
+                if error_match:
+                    ultimo_estado["error"] = float(error_match.group(1))
+                
+                # ============================================================
+                # 3. DETECTAR PIEZAS POR COLOR
+                # ============================================================
+                if "ROJO → US ROJO ACTIVADO" in linea or "ROJO detectado" in linea:
+                    ultimo_estado["color_detectado"] = "ROJO"
+                    ultimo_estado["piezas_rojas"] += 1
+                    ultimo_estado["historial_colores"].insert(0, {
+                        "color": "ROJO", 
+                        "tiempo": datetime.now().strftime("%H:%M:%S")
+                    })
+                    if len(ultimo_estado["historial_colores"]) > 10:
+                        ultimo_estado["historial_colores"].pop()
+                    print(f"🎨 ROJO detectado - Total: {ultimo_estado['piezas_rojas']}")
+                
+                elif "VERDE → US VERDE ACTIVADO" in linea or "VERDE detectado" in linea:
+                    ultimo_estado["color_detectado"] = "VERDE"
+                    ultimo_estado["piezas_verdes"] += 1
+                    ultimo_estado["historial_colores"].insert(0, {
+                        "color": "VERDE", 
+                        "tiempo": datetime.now().strftime("%H:%M:%S")
+                    })
+                    if len(ultimo_estado["historial_colores"]) > 10:
+                        ultimo_estado["historial_colores"].pop()
+                    print(f"🎨 VERDE detectado - Total: {ultimo_estado['piezas_verdes']}")
+                
+                elif "AZUL → US ROJO ACTIVADO" in linea or "AZUL detectado" in linea:
+                    ultimo_estado["color_detectado"] = "AZUL"
+                    ultimo_estado["piezas_azules"] += 1
+                    ultimo_estado["historial_colores"].insert(0, {
+                        "color": "AZUL", 
+                        "tiempo": datetime.now().strftime("%H:%M:%S")
+                    })
+                    if len(ultimo_estado["historial_colores"]) > 10:
+                        ultimo_estado["historial_colores"].pop()
+                    print(f"🎨 AZUL detectado - Total: {ultimo_estado['piezas_azules']}")
+                
+                # ============================================================
+                # 4. DETECTAR PIEZA MANUAL
+                # ============================================================
+                if "Pieza manual:" in linea:
+                    if "ROJO" in linea:
+                        ultimo_estado["color_detectado"] = "ROJO"
+                        ultimo_estado["piezas_rojas"] += 1
+                        ultimo_estado["historial_colores"].insert(0, {
+                            "color": "ROJO", 
+                            "tiempo": datetime.now().strftime("%H:%M:%S")
+                        })
+                        if len(ultimo_estado["historial_colores"]) > 10:
+                            ultimo_estado["historial_colores"].pop()
+                    elif "VERDE" in linea:
+                        ultimo_estado["color_detectado"] = "VERDE"
+                        ultimo_estado["piezas_verdes"] += 1
+                        ultimo_estado["historial_colores"].insert(0, {
+                            "color": "VERDE", 
+                            "tiempo": datetime.now().strftime("%H:%M:%S")
+                        })
+                        if len(ultimo_estado["historial_colores"]) > 10:
+                            ultimo_estado["historial_colores"].pop()
+                    elif "AZUL" in linea:
+                        ultimo_estado["color_detectado"] = "AZUL"
+                        ultimo_estado["piezas_azules"] += 1
+                        ultimo_estado["historial_colores"].insert(0, {
+                            "color": "AZUL", 
+                            "tiempo": datetime.now().strftime("%H:%M:%S")
+                        })
+                        if len(ultimo_estado["historial_colores"]) > 10:
+                            ultimo_estado["historial_colores"].pop()
+                
+                # ============================================================
+                # 5. EXTRAER VALORES RGB si aparecen
+                # ============================================================
+                rojo_match = re.search(r'rojo=(\d+)', linea)
+                verde_match = re.search(r'verde=(\d+)', linea)
+                azul_match = re.search(r'azul=(\d+)', linea)
+                
+                if rojo_match: ultimo_estado["rojo"] = int(rojo_match.group(1))
+                if verde_match: ultimo_estado["verde"] = int(verde_match.group(1))
+                if azul_match: ultimo_estado["azul"] = int(azul_match.group(1))
+                
+                # ============================================================
+                # 6. SEMÁFORO - Calcular basado en el error
+                # ============================================================
+                if ultimo_estado["referencia"] > 0:
+                    error_pct = abs(ultimo_estado["error"]) / ultimo_estado["referencia"] * 100
+                    if error_pct <= 5:
+                        ultimo_estado["semaforo"] = "VERDE"
+                    elif error_pct <= 15:
+                        ultimo_estado["semaforo"] = "AMARILLO"
+                    else:
+                        ultimo_estado["semaforo"] = "ROJO"
+                
     except Exception as e:
         print(f"Error serial: {e}")
 
@@ -161,6 +214,20 @@ def enviar_comando_arduino(comando):
     except Exception as e:
         print(f"Error: {e}")
         return False
+
+# ========== HILO PARA LECTURA SERIAL CONTINUA ==========
+def serial_reader_thread():
+    while True:
+        leer_serial()
+        time.sleep(0.1)  # Leer cada 100ms
+
+# Iniciar el hilo solo si el Arduino está conectado
+if arduino is not None and arduino.is_open:
+    thread = threading.Thread(target=serial_reader_thread, daemon=True)
+    thread.start()
+    print("🔄 Hilo de lectura serial iniciado")
+else:
+    print("⚠️ Arduino no conectado - No se inició el hilo de lectura")
 
 # ========== RUTAS ==========
 @app.route("/login", methods=["GET", "POST"])
@@ -190,11 +257,6 @@ def api_data():
     if not is_logged_in():
         return jsonify({"ok": False})
     
-    if arduino and arduino.is_open:
-        enviar_comando_arduino("GET_STATUS")
-        time.sleep(0.05)
-        leer_serial()
-
     return jsonify({
         "ok": True,
         "estado": ultimo_estado["estado"],
@@ -223,6 +285,8 @@ def set_referencia():
     data = request.get_json()
     nueva_ref = float(data.get("rpm_referencia", 0))
     
+    ultimo_estado["referencia"] = nueva_ref
+    
     enviar_comando_arduino(f"SET_REF:{nueva_ref}")
     
     return jsonify({
@@ -239,15 +303,16 @@ def control():
     data = request.get_json()
     comando = data.get("comando", "")
 
-    comandos_map = {
+    # Comandos que entiende tu Arduino
+    comandos_validos = {
         "O": "O",
         "S": "S",
         "P": "P",
         "M": "M"
     }
     
-    if comando in comandos_map:
-        enviar_comando_arduino(comandos_map[comando])
+    if comando in comandos_validos:
+        enviar_comando_arduino(comandos_validos[comando])
         return jsonify({"ok": True, "mensaje": f"Comando {comando} enviado"})
 
     return jsonify({"ok": False, "error": "Comando inválido"})
@@ -258,7 +323,17 @@ def reset():
         return jsonify({"ok": False, "error": "No autorizado"})
     
     enviar_comando_arduino("P")
+    
+    # Resetear estado local
+    ultimo_estado["piezas_rojas"] = 0
+    ultimo_estado["piezas_verdes"] = 0
+    ultimo_estado["piezas_azules"] = 0
+    ultimo_estado["historial_colores"] = []
+    ultimo_estado["rpm"] = 0.0
+    ultimo_estado["error"] = 0.0
+    ultimo_estado["pwm"] = 0
+    
     return jsonify({"ok": True, "mensaje": "Sistema reseteado"})
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
