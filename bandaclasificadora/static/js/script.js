@@ -3,6 +3,7 @@ let rpmHistory = [];
 let referenciaHistory = [];
 let isUpdating = false;
 
+// ===== FUNCIONES AUXILIARES =====
 function getEstadoDisplay(estado) {
     const nombres = {
         'DETENIDO': 'Detenido',
@@ -32,6 +33,7 @@ function getColorHex(color) {
     return colores[color] || '#4a4a5a';
 }
 
+// ===== ENVÍO DE COMANDOS =====
 async function enviarComando(cmd) {
     const btn = event?.target?.closest('.btn');
     if (btn) {
@@ -56,6 +58,7 @@ async function enviarComando(cmd) {
     }
 }
 
+// ===== RESET SISTEMA =====
 async function resetSistema() {
     try {
         const response = await fetch("/api/reset", {
@@ -63,12 +66,27 @@ async function resetSistema() {
             headers: { "Content-Type": "application/json" }
         });
         const result = await response.json();
-        addMonitorMessage(result.mensaje, result.ok ? 'success' : 'error');
+        if (result.ok) {
+            addMonitorMessage('✅ Sistema reseteado correctamente', 'success');
+            
+            // Resetear datos locales
+            rpmHistory = [];
+            referenciaHistory = [];
+            if (rpmChart) {
+                rpmChart.data.labels = [];
+                rpmChart.data.datasets[0].data = [];
+                rpmChart.data.datasets[1].data = [];
+                rpmChart.update('none');
+            }
+        } else {
+            addMonitorMessage('❌ Error al resetear el sistema', 'error');
+        }
     } catch (error) {
-        addMonitorMessage('Error al resetear el sistema', 'error');
+        addMonitorMessage('❌ Error de conexión al resetear', 'error');
     }
 }
 
+// ===== SET REFERENCIA =====
 async function setReferencia() {
     const input = document.getElementById("referencia-input");
     const valor = parseFloat(input.value);
@@ -94,6 +112,7 @@ async function setReferencia() {
     }
 }
 
+// ===== MONITOR SERIAL =====
 function addMonitorMessage(message, type = 'info') {
     const monitor = document.getElementById("monitor");
     if (!monitor) return;
@@ -120,6 +139,7 @@ function clearMonitor() {
     }
 }
 
+// ===== GRÁFICA =====
 function initChart() {
     const canvas = document.getElementById('rpmChart');
     if (!canvas) return;
@@ -217,6 +237,7 @@ function updateCharts(rpm, referencia) {
     rpmChart.update('none');
 }
 
+// ===== SEMÁFORO =====
 function updateSemaforo(semaforo) {
     const semaforoLeds = document.getElementById('semaforo-leds');
     const semaforoMessage = document.getElementById('semaforo-message');
@@ -236,6 +257,7 @@ function updateSemaforo(semaforo) {
     if (semaforoMessage) semaforoMessage.innerText = estado.msg;
 }
 
+// ===== SENSOR DE COLOR =====
 function updateSensorColor(color, rojo, verde, azul) {
     const colorPreview = document.getElementById('color-preview');
     const colorDetectado = document.getElementById('color-detectado');
@@ -271,6 +293,7 @@ function updateSensorColor(color, rojo, verde, azul) {
     }
 }
 
+// ===== HISTORIAL =====
 function updateHistorial(historial) {
     const container = document.getElementById('historial-grid');
     if (!container) return;
@@ -296,21 +319,21 @@ function updateHistorial(historial) {
     }
 }
 
-function updateCounters(rojas, verdes, azules, desconocidas) {
+// ===== CONTADORES =====
+function updateCounters(rojas, verdes, azules) {
     document.getElementById("piezas-rojas").innerText = rojas;
     document.getElementById("piezas-verdes").innerText = verdes;
     document.getElementById("piezas-azules").innerText = azules;
-    document.getElementById("piezas-desconocidas").innerText = desconocidas;
     
-    const total = rojas + verdes + azules + desconocidas;
+    const total = rojas + verdes + azules;
     document.getElementById("piezas-total").innerText = total;
 }
 
+// ===== PID =====
 function updatePIDInfo(pwm, error) {
     const pwmBar = document.getElementById('pwm-bar');
     const pwmValue = document.getElementById('pwm-value');
     const errorValue = document.getElementById('error-value');
-    const estadoValue = document.getElementById('estado-value');
     const rpmValue = document.getElementById('rpm-value');
     const referenciaValue = document.getElementById('referencia-value');
     
@@ -324,13 +347,13 @@ function updatePIDInfo(pwm, error) {
     }
 }
 
-function updateKPI(id, value, suffix = '') {
+function updateKPI(id, value) {
     const element = document.getElementById(`${id}-value`);
     if (!element) return;
     const newValue = typeof value === 'number' ? value.toFixed ? value.toFixed(1) : value : value;
-    if (element.innerText !== `${newValue}${suffix}`) {
+    if (element.innerText !== `${newValue}`) {
         element.style.transform = 'scale(1.05)';
-        element.innerText = `${newValue}${suffix}`;
+        element.innerText = `${newValue}`;
         setTimeout(() => { if (element) element.style.transform = ''; }, 200);
     }
 }
@@ -353,6 +376,7 @@ function updateEstado(estado) {
     if (estadoDisplay) estadoDisplay.innerText = getEstadoDisplay(estado);
 }
 
+// ===== ACTUALIZAR DATOS =====
 async function actualizarDatos() {
     if (isUpdating) return;
     isUpdating = true;
@@ -371,16 +395,9 @@ async function actualizarDatos() {
             updateSemaforo(data.semaforo);
             updatePIDInfo(data.pwm, data.error);
             updateSensorColor(data.color_detectado, data.rojo, data.verde, data.azul);
-            updateCounters(data.piezas_rojas, data.piezas_verdes, data.piezas_azules, data.piezas_desconocidas);
+            updateCounters(data.piezas_rojas, data.piezas_verdes, data.piezas_azules);
             updateHistorial(data.historial_colores || []);
             updateCharts(data.rpm, data.referencia);
-            
-            // Mostrar el color detectado en el monitor
-            if (data.color_detectado && data.color_detectado !== 'NINGUNO') {
-                const colorName = getColorName(data.color_detectado);
-                const colorHex = getColorHex(data.color_detectado);
-                // El monitor ya se actualiza desde el Arduino, no es necesario agregar más mensajes
-            }
         }
     } catch (error) {
         console.error('Error:', error);
@@ -389,6 +406,7 @@ async function actualizarDatos() {
     }
 }
 
+// ===== INICIALIZACIÓN =====
 document.addEventListener('DOMContentLoaded', () => {
     initChart();
     actualizarDatos();
