@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Clasificación Industrial</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="dashboard">
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🏭</span>
+                <div>
+                    <span class="logo-text">Sistema de Clasificación</span>
+                    <span class="logo-subtitle">Control de calidad por color</span>
+                </div>
+                <span class="status-badge" id="status-badge">EN PRODUCCIÓN</span>
+            </div>
+            <div class="header-right">
+                <div class="connection-status">
+                    <span class="status-led"></span>
+                    <span>Conectado</span>
+                </div>
+                <a href="/logout" class="logout-btn">
+                    Cerrar Sesión
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <!-- Panel de Control -->
+        <div class="row-2cols">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">⚙️</span>
+                    <h2>Control del Sistema</h2>
+                    <span class="card-badge">Manual</span>
+                </div>
+                <div class="button-panel">
+                    <button onclick="enviarComando('O')" class="btn btn-start">
+                        <span class="btn-icon">▶</span>
+                        Iniciar
+                    </button>
+                    <button onclick="enviarComando('S')" class="btn btn-stop">
+                        <span class="btn-icon">⏹</span>
+                        Detener
+                    </button>
+                    <button onclick="enviarComando('P')" class="btn btn-pause">
+                        <span class="btn-icon">⏸</span>
+                        Pausar
+                    </button>
+                    <button onclick="enviarComando('M')" class="btn btn-reset">
+                        <span class="btn-icon">🔄</span>
+                        Pieza Manual
+                    </button>
+                </div>
+                
+                <div class="status-indicator">
+                    <div class="status-dot detenido" id="status-dot"></div>
+                    <span class="status-text" id="status-text">Detenido</span>
+                    <span style="margin-left: auto; font-size: 12px; color: var(--text-muted);">
+                        RPM Referencia: <strong id="referencia-value" style="color: var(--cyan);">0</strong>
+                    </span>
+                </div>
+
+                <div class="referencia-control" style="margin: 0 24px 18px 24px;">
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">SET RPM:</span>
+                    <input type="number" id="referencia-input" value="55" min="0" max="255" step="5">
+                    <button onclick="setReferencia()" class="btn-set">Aplicar</button>
+                </div>
+            </div>
+
+            <!-- Contadores de Producción -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📊</span>
+                    <h2>Producción por Color</h2>
+                    <span class="card-badge">Tiempo Real</span>
+                </div>
+                <div class="counters-container">
+                    <div class="counter-item rojo">
+                        <span class="counter-label">Rojo</span>
+                        <span class="counter-value rojo" id="piezas-rojas">0</span>
+                    </div>
+                    <div class="counter-item verde">
+                        <span class="counter-label">Verde</span>
+                        <span class="counter-value verde" id="piezas-verdes">0</span>
+                    </div>
+                    <div class="counter-item azul">
+                        <span class="counter-label">Azul</span>
+                        <span class="counter-value azul" id="piezas-azules">0</span>
+                    </div>
+                    <div class="counter-item desconocido">
+                        <span class="counter-label">Total</span>
+                        <span class="counter-value desconocido" id="piezas-total">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sensor de Color y Historial -->
+        <div class="row-2cols">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🎨</span>
+                    <h2>Sensor de Color</h2>
+                    <span class="card-badge">TCS34725</span>
+                </div>
+                <div class="sensor-content">
+                    <div class="color-indicator">
+                        <div class="color-preview" id="color-preview"></div>
+                        <div class="color-info">
+                            <span class="color-label">Color Detectado</span>
+                            <span class="color-value" id="color-detectado">Ninguno</span>
+                        </div>
+                    </div>
+                    <div class="rgb-values">
+                        <div class="rgb-bar">
+                            <span class="label">🔴 Rojo</span>
+                            <div class="rgb-bar-bg">
+                                <div class="rgb-bar-fill rojo" id="rojo-bar" style="width: 0%"></div>
+                            </div>
+                            <span class="valor" id="rojo-valor">0</span>
+                        </div>
+                        <div class="rgb-bar">
+                            <span class="label">🟢 Verde</span>
+                            <div class="rgb-bar-bg">
+                                <div class="rgb-bar-fill verde" id="verde-bar" style="width: 0%"></div>
+                            </div>
+                            <span class="valor" id="verde-valor">0</span>
+                        </div>
+                        <div class="rgb-bar">
+                            <span class="label">🔵 Azul</span>
+                            <div class="rgb-bar-bg">
+                                <div class="rgb-bar-fill azul" id="azul-bar" style="width: 0%"></div>
+                            </div>
+                            <span class="valor" id="azul-valor">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historial de Colores -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📋</span>
+                    <h2>Historial de Detecciones</h2>
+                    <span class="card-badge">Últimos 10</span>
+                </div>
+                <div class="historial-container">
+                    <div class="historial-grid" id="historial-grid">
+                        <!-- Generado por JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfica y Control PID -->
+        <div class="row-2cols">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">📈</span>
+                    <h2>Monitoreo de Velocidad</h2>
+                    <span class="card-badge">RPM Real vs Referencia</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="rpmChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-icon">🎛️</span>
+                    <h2>Control PID</h2>
+                    <span class="card-badge" id="estado-display">Detenido</span>
+                </div>
+                <div class="pid-content">
+                    <div class="semaforo-section">
+                        <div class="semaforo-leds" id="semaforo-leds">
+                            <div class="led led-rojo"></div>
+                            <div class="led led-amarillo"></div>
+                            <div class="led led-verde"></div>
+                        </div>
+                        <div class="semaforo-message" id="semaforo-message">Sistema listo</div>
+                    </div>
+                    
+                    <div class="stats-row">
+                        <div class="stat-mini">
+                            <span class="label">RPM Actual</span>
+                            <span class="value" id="rpm-value" style="color: var(--cyan);">0.0</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="label">Error</span>
+                            <span class="value" id="error-value" style="color: var(--orange);">0.0</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="label">PWM</span>
+                            <span class="value" id="pwm-value" style="color: var(--purple);">0</span>
+                        </div>
+                    </div>
+
+                    <div class="pwm-control">
+                        <div class="pwm-label">
+                            <span>Señal PWM</span>
+                            <span id="pwm-value-label">0%</span>
+                        </div>
+                        <div class="pwm-bar-bg">
+                            <div class="pwm-bar-fill" id="pwm-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitor Serial -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-icon">📟</span>
+                <h2>Monitor de Comunicación</h2>
+                <span class="monitor-badge">Serial</span>
+                <button onclick="clearMonitor()" class="monitor-clear">Limpiar</button>
+            </div>
+            <div class="monitor-content" id="monitor">
+                <div class="monitor-line system">[Sistema] Iniciando comunicación...</div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <span>Sistema de Clasificación Industrial</span>
+            <span>|</span>
+            <span>Control PID en tiempo real</span>
+            <span>|</span>
+            <span>Sensor TCS34725</span>
+            <span>|</span>
+            <span>2024</span>
+        </div>
+    </footer>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
